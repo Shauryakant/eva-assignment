@@ -103,7 +103,7 @@ func (h *TicketHandler) GetTicketByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idStr := chi.URLParam(r, "id")
+	idStr := strings.TrimSpace(chi.URLParam(r, "id"))
 	ticketID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		utils.JSONError(w, http.StatusNotFound, "ticket not found")
@@ -134,7 +134,7 @@ func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	idStr := chi.URLParam(r, "id")
+	idStr := strings.TrimSpace(chi.URLParam(r, "id"))
 	ticketID, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		utils.JSONError(w, http.StatusNotFound, "ticket not found")
@@ -147,7 +147,8 @@ func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if input.Status == "" {
+	statusVal := models.Status(strings.TrimSpace(string(input.Status)))
+	if statusVal == "" {
 		utils.JSONError(w, http.StatusBadRequest, "status is required")
 		return
 	}
@@ -166,7 +167,7 @@ func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := models.ValidateStatusTransition(ticket.Status, input.Status); err != nil {
+	if err := models.ValidateStatusTransition(ticket.Status, statusVal); err != nil {
 		utils.JSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -174,7 +175,7 @@ func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Reques
 	now := time.Now().UTC()
 	update := bson.M{
 		"$set": bson.M{
-			"status":     input.Status,
+			"status":     statusVal,
 			"updated_at": now,
 		},
 	}
@@ -185,7 +186,7 @@ func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	ticket.Status = input.Status
+	ticket.Status = statusVal
 	ticket.UpdatedAt = now
 
 	utils.JSON(w, http.StatusOK, ticket)
