@@ -64,12 +64,12 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 
 The status of a ticket strictly follows a single-step forward progression:
 
-$$\text{open} \xrightarrow{\quad} \text{in\_progress} \xrightarrow{\quad} \text{closed}$$
+`open` -> `in_progress` -> `closed`
 
-- **`open` $\rightarrow$ `in_progress`**: Allowed (`200 OK`).
-- **`in_progress` $\rightarrow$ `closed`**: Allowed (`200 OK`).
-- **`open` $\rightarrow$ `closed`**: Prohibited (`400 Bad Request`). Tickets cannot skip intermediate states.
-- **`closed` $\rightarrow$ `open` / `in_progress`**: Prohibited (`400 Bad Request`). Closed tickets are immutable and cannot be reopened.
+- **`open` -> `in_progress`**: Allowed (`200 OK`).
+- **`in_progress` -> `closed`**: Allowed (`200 OK`).
+- **`open` -> `closed`**: Prohibited (`400 Bad Request`). Tickets cannot skip intermediate states.
+- **`closed` -> `open` / `in_progress`**: Prohibited (`400 Bad Request`). Closed tickets are immutable and cannot be reopened.
 
 ---
 
@@ -121,28 +121,6 @@ go test -v ./...
 
 ---
 
-## Deployment Instructions
-
-### A. Deploy Backend on Render (Free Tier)
-1. Sign in to [render.com](https://render.com) with GitHub.
-2. Create **New Web Service** pointing to repository `Shauryakant/eva-assignment`.
-3. Select **Docker** runtime.
-4. Add Environment Variables:
-   - `PORT`: `8080`
-   - `MONGODB_URI`: `mongodb+srv://udemy:udemy123@cluster0.ywipqhb.mongodb.net/evabharat`
-   - `DB_NAME`: `evabharat`
-   - `JWT_SECRET`: `supersecretjwtkeychangeinproduction`
-5. Deploy service and copy your public Render URL.
-6. Verify `/health` endpoint: `https://your-service.onrender.com/health`.
-
-### B. Deploy Frontend on Vercel (Free Tier)
-1. Sign in to [vercel.com](https://vercel.com) with GitHub.
-2. Add project pointing to `Shauryakant/eva-assignment`.
-3. Deploy (Vercel automatically detects `vercel.json`).
-4. Open your live Vercel URL, click **Configure API Host** in footer, and paste your Render backend URL.
-
----
-
 ## Incremental Git Commit History
 
 The project history follows the required 10-step commit workflow without squashing:
@@ -163,6 +141,6 @@ The project history follows the required 10-step commit workflow without squashi
 ## Assumptions & Design Decisions
 
 1. **MongoDB Choice**: Aligns with JSON document structure, high read/write performance, and unique indexing (`users.email`).
-2. **Sequential Status Enforcement**: Defaulted to strict step-by-step state transitions (`open` $\rightarrow$ `in_progress` $\rightarrow$ `closed`).
+2. **Sequential Status Enforcement**: Defaulted to strict step-by-step state transitions (`open` -> `in_progress` -> `closed`).
 3. **HTTP 404 vs 403 on Non-Owned Tickets**: System intentionally returns `404 Not Found` to prevent resource enumeration.
 4. **Minimal Dependencies**: Standard Go library with Chi router for lightweight binary size and clean code architecture.
