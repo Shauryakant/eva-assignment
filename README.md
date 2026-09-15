@@ -3,7 +3,7 @@
 A backend-only RESTful microservice built in Golang for managing user authentication and support ticket lifecycle management, featuring an optional standalone Web Dashboard UI.
 
 - **GitHub Repository**: [https://github.com/Shauryakant/eva-assignment.git](https://github.com/Shauryakant/eva-assignment.git)
-- **Live Database**: MongoDB Atlas (`evabharat`)
+- **Database**: MongoDB Atlas (`evabharat`)
 
 ---
 
@@ -14,7 +14,7 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 - **Authentication**: JWT (HS256) via `github.com/golang-jwt/jwt/v5`
 - **Password Hashing**: `bcrypt` (`golang.org/x/crypto/bcrypt`)
 - **Configuration**: Environment variables (`.env` via `github.com/joho/godotenv`)
-- **Frontend / Dashboard**: HTML5, CSS3 (Inter font, dark mode), Vanilla JavaScript (No frameworks)
+- **Frontend / Dashboard**: HTML5, CSS3, Vanilla JavaScript
 
 ---
 
@@ -25,7 +25,7 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 {
   "_id": "65f1a2b3c4d5e6f7a8b9c0d1",
   "email": "user@example.com",
-  "password_hash": "$2a$10$...", // Omitted from all JSON responses (json:"-")
+  "password_hash": "$2a$10$...",
   "created_at": "2026-09-15T10:00:00Z"
 }
 ```
@@ -37,7 +37,7 @@ A backend-only RESTful microservice built in Golang for managing user authentica
   "user_id": "65f1a2b3c4d5e6f7a8b9c0d1",
   "title": "Database connection drop",
   "description": "App loses connection to MongoDB under high concurrency",
-  "status": "open", // Supported: "open" | "in_progress" | "closed"
+  "status": "open",
   "created_at": "2026-09-15T10:05:00Z",
   "updated_at": "2026-09-15T10:05:00Z"
 }
@@ -55,8 +55,8 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 | `POST` | `/auth/logout` | No | Logout user & clear session | `200 OK` |
 | `POST` | `/tickets` | Yes (`Bearer <token>`) | Create a new ticket owned by caller | `201 Created` |
 | `GET` | `/tickets` | Yes (`Bearer <token>`) | List all tickets owned by caller | `200 OK` |
-| `GET` | `/tickets/{id}` | Yes (`Bearer <token>`) | Fetch single ticket by ID | `200 OK` / `404 Not Found` |
-| `PATCH` | `/tickets/{id}/status` | Yes (`Bearer <token>`) | Update ticket status | `200 OK` / `400 Bad Request` / `404` |
+| `GET` | `/tickets/{id}` | Yes (`Bearer <token>`) | Fetch single ticket by ID | `200 OK` / `404` |
+| `PATCH` | `/tickets/{id}/status` | Yes (`Bearer <token>`) | Update ticket status | `200 OK` / `400` / `404` |
 
 ---
 
@@ -77,8 +77,8 @@ $$\text{open} \xrightarrow{\quad} \text{in\_progress} \xrightarrow{\quad} \text{
 
 1. **Bearer Token Authentication**: Protected endpoints require `Authorization: Bearer <token>`. Missing, expired, or invalid tokens return `401 Unauthorized`.
 2. **Ownership Isolation**: Users can only read and modify tickets they created (`user_id == caller_id`).
-3. **No Existence Leaks (Strict 404)**: If a user attempts to access or update a ticket ID that exists but belongs to another user, the API responds with `404 Not Found` (identical to non-existent IDs), avoiding resource enumeration vectors.
-4. **Password Security**: Passwords are saved strictly as `bcrypt` hashes with cost factor 10. Plain text passwords and password hashes are never logged or exposed in API responses.
+3. **No Existence Leaks (Strict 404)**: Accessing non-owned ticket IDs returns `404 Not Found` (never `403`), avoiding resource enumeration.
+4. **Password Security**: Passwords stored as `bcrypt` hashes (cost 10). Password hashes are marked `json:"-"` and never returned in API responses.
 
 ---
 
@@ -100,20 +100,16 @@ JWT_SECRET=supersecretjwtkeychangeinproduction
 ### 1. Running with Go directly
 
 ```bash
-# Clone the repository
 git clone https://github.com/Shauryakant/eva-assignment.git
 cd eva-assignment
-
-# Run the API server
 go run main.go
 ```
 
-Open your browser at **[http://localhost:8080](http://localhost:8080)** to test via the built-in interactive dashboard.
+Open your browser at **[http://localhost:8080](http://localhost:8080)** to access the dashboard.
 
 ### 2. Running Automated Terminal Demo Script
 
 ```bash
-# In Git Bash:
 bash test_demo.sh
 ```
 
@@ -123,59 +119,50 @@ bash test_demo.sh
 go test -v ./...
 ```
 
-### 4. Running with Docker Container
-
-```bash
-docker build -t ticket-system .
-docker run -p 8080:8080 ticket-system
-```
-
 ---
 
 ## Deployment Instructions
 
 ### A. Deploy Backend on Render (Free Tier)
 1. Sign in to [render.com](https://render.com) with GitHub.
-2. Create **New Web Service** pointing to `Shauryakant/eva-assignment`.
+2. Create **New Web Service** pointing to repository `Shauryakant/eva-assignment`.
 3. Select **Docker** runtime.
-4. Add environment variables:
+4. Add Environment Variables:
    - `PORT`: `8080`
    - `MONGODB_URI`: `mongodb+srv://udemy:udemy123@cluster0.ywipqhb.mongodb.net/evabharat`
    - `DB_NAME`: `evabharat`
    - `JWT_SECRET`: `supersecretjwtkeychangeinproduction`
-5. Deploy service and copy public URL (e.g. `https://ticket-system-api.onrender.com`).
-6. Verify `/health` endpoint: `https://ticket-system-api.onrender.com/health`.
+5. Deploy service and copy your public Render URL.
+6. Verify `/health` endpoint: `https://your-service.onrender.com/health`.
 
 ### B. Deploy Frontend on Vercel (Free Tier)
 1. Sign in to [vercel.com](https://vercel.com) with GitHub.
 2. Add project pointing to `Shauryakant/eva-assignment`.
 3. Deploy (Vercel automatically detects `vercel.json`).
-4. On your live Vercel URL, click **Configure API Host** in the footer and paste your live Render backend URL.
+4. Open your live Vercel URL, click **Configure API Host** in footer, and paste your Render backend URL.
 
 ---
 
 ## Incremental Git Commit History
 
-The project history follows the required 10-step incremental commit workflow without squashing:
+The project history follows the required 10-step commit workflow without squashing:
 
-```text
-40263fc fix: add CORS headers and trim input IDs in ticket handlers
-4cbac93 docs: README with run instructions, deployment URL, assumptions
-5b0693e chore: Dockerfile + docker-compose (optional, for local mongo)
-46b6983 test: add basic handler/unit tests for auth and status transitions
-ac95623 feat: patch ticket status with transition validation
-b5ac966 feat: get single ticket with ownership check
-ec84bdd feat: ticket model + create + list endpoints
-0682013 feat: auth register + login + JWT middleware
-3c73429 feat: mongo connection + user model
-82fe89b chore: init go module, project structure, .env.example
-```
+- `40263fc` - `fix: add CORS headers and trim input IDs in ticket handlers`
+- `4cbac93` - `docs: README with run instructions, deployment URL, assumptions`
+- `5b0693e` - `chore: Dockerfile + docker-compose (optional, for local mongo)`
+- `46b6983` - `test: add basic handler/unit tests for auth and status transitions`
+- `ac95623` - `feat: patch ticket status with transition validation`
+- `b5ac966` - `feat: get single ticket with ownership check`
+- `ec84bdd` - `feat: ticket model + create + list endpoints`
+- `0682013` - `feat: auth register + login + JWT middleware`
+- `3c73429` - `feat: mongo connection + user model`
+- `82fe89b` - `chore: init go module, project structure, .env.example`
 
 ---
 
 ## Assumptions & Design Decisions
 
-1. **MongoDB Choice**: MongoDB was selected for seamless alignment with JSON document structures, high read/write performance, and flexible indexing (such as unique constraints on `users.email`).
-2. **Sequential Status Enforcement**: Defaulted to strict step-by-step state transitions (`open` -> `in_progress` -> `closed`). Jumping directly from `open` to `closed` is treated as an illegal state transition to prevent skipping resolution phases.
-3. **HTTP 404 vs 403 on Non-Owned Tickets**: The system intentionally returns `404 Not Found` instead of `403 Forbidden` when accessing non-owned tickets to prevent attacker resource enumeration.
-4. **Minimal Dependencies**: Standard Go library with Chi router was chosen over bloated frameworks to maintain fast startup, minimal binary size, and clean code layout.
+1. **MongoDB Choice**: Aligns with JSON document structure, high read/write performance, and unique indexing (`users.email`).
+2. **Sequential Status Enforcement**: Defaulted to strict step-by-step state transitions (`open` $\rightarrow$ `in_progress` $\rightarrow$ `closed`).
+3. **HTTP 404 vs 403 on Non-Owned Tickets**: System intentionally returns `404 Not Found` to prevent resource enumeration.
+4. **Minimal Dependencies**: Standard Go library with Chi router for lightweight binary size and clean code architecture.
