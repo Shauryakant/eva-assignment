@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket System API Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 2rem; max-width: 900px; margin: 0 auto; }
+        h1, h2 { margin-bottom: 1rem; font-weight: 600; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+        input, textarea, select { width: 100%; padding: 0.6rem 0.8rem; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem; }
+        button { background: var(--primary); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        .ticket-item { background: #0f172a; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge-open { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+        .badge-in_progress { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .badge-closed { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .token-bar { background: #1e293b; border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 2rem; font-size: 0.85rem; word-break: break-all; }
+        .flex { display: flex; gap: 0.5rem; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <h1>🎫 Ticket System API Dashboard</h1>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Backend-Only Golang Microservice Interface</p>
+
+    <div class="token-bar" id="tokenDisplay">
+        <strong>Status:</strong> <span style="color: var(--warning);">Not Authenticated</span>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Account Auth</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail" placeholder="user@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="••••••••">
+            </div>
+            <div class="flex">
+                <button onclick="handleRegister()">Register</button>
+                <button onclick="handleLogin()" style="background: #475569;">Login</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Create Ticket</h2>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="ticketTitle" placeholder="Issue title">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="ticketDesc" rows="2" placeholder="Issue description"></textarea>
+            </div>
+            <button onclick="handleCreateTicket()">Create Ticket</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>My Tickets</h2>
+            <button onclick="fetchTickets()" style="background: #334155; font-size: 0.8rem;">Refresh</button>
+        </div>
+        <div id="ticketsList">
+            <p style="color: var(--text-muted);">Log in to view tickets.</p>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('jwt_token') || '';
+
+        function updateTokenDisplay() {
+            const bar = document.getElementById('tokenDisplay');
+            if (token) {
+                bar.innerHTML = `<strong>Status:</strong> <span style="color: var(--success);">Authenticated</span> | Token: ${token.substring(0, 20)}...`;
+            } else {
+                bar.innerHTML = `<strong>Status:</strong> <span style="color: var(--warning);">Not Authenticated</span>`;
+            }
+        }
+        updateTokenDisplay();
+
+        async function handleRegister() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const res = await fetch('/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            alert(res.ok ? 'Registered successfully! You can now log in.' : data.error || 'Registration failed');
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const res = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (res.ok && data.token) {
+                token = data.token;
+                localStorage.setItem('jwt_token', token);
+                updateTokenDisplay();
+                fetchTickets();
+            } else {
+                alert(data.error || 'Login failed');
+            }
+        }
+
+        async function handleCreateTicket() {
+            if (!token) return alert('Please log in first');
+            const title = document.getElementById('ticketTitle').value;
+            const description = document.getElementById('ticketDesc').value;
+            const res = await fetch('/tickets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ title, description })
+            });
+            if (res.ok) {
+                document.getElementById('ticketTitle').value = '';
+                document.getElementById('ticketDesc').value = '';
+                fetchTickets();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to create ticket');
+            }
+        }
+
+        async function fetchTickets() {
+            if (!token) return;
+            const res = await fetch('/tickets', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const tickets = await res.json();
+                const container = document.getElementById('ticketsList');
+                if (tickets.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No tickets found.</p>';
+                    return;
+                }
+                container.innerHTML = tickets.map(t => `
+                    <div class="ticket-item">
+                        <div>
+                            <strong>${t.title}</strong>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">${t.description || 'No description'}</p>
+                        </div>
+                        <div class="flex">
+                            <span class="badge badge-${t.status}">${t.status}</span>
+                            ${t.status === 'open' ? `<button onclick="updateStatus('${t.id}', 'in_progress')" style="font-size: 0.75rem;">Start</button>` : ''}
+                            ${t.status === 'in_progress' ? `<button onclick="updateStatus('${t.id}', 'closed')" style="font-size: 0.75rem; background: #22c55e;">Close</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function updateStatus(id, newStatus) {
+            const res = await fetch(`/tickets/${id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (res.ok) {
+                fetchTickets();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to update status');
+            }
+        }
+
+        if (token) fetchTickets();
+    </script>
+</body>
+</html>

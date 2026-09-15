@@ -36,6 +36,10 @@ func SetupRouter(cfg *config.Config, db *database.DB) http.Handler {
 	authHandler := handlers.NewAuthHandler(db, cfg.JWTSecret)
 	ticketHandler := handlers.NewTicketHandler(db)
 
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/index.html")
+	})
+
 	r.Get("/health", handlers.HealthCheck)
 
 	r.Post("/auth/register", authHandler.Register)
