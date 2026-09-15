@@ -33,7 +33,6 @@
 
         .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; flex: 1; width: 100%; }
 
-        /* Auth Screen (Centered Single Card) */
         .auth-container { max-width: 420px; margin: 4rem auto; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
         .auth-header { text-align: center; margin-bottom: 1.5rem; }
         .auth-header h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
@@ -43,7 +42,6 @@
         .auth-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
         
-        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
         .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; }
@@ -82,6 +80,10 @@
         .badge-open { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
         .badge-in_progress { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-closed { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 500px; padding: 2rem; }
 
         #toastContainer { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 1000; display: flex; flex-direction: column; gap: 0.5rem; }
         .toast { padding: 0.85rem 1.25rem; border-radius: 8px; color: white; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); animation: slideIn 0.3s forwards; }
@@ -134,7 +136,6 @@
 
         <!-- VIEW 2: DASHBOARD (TICKET MANAGEMENT) -->
         <div id="dashboardScreen" style="display: none;">
-            <!-- Stats Bar -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-label">TOTAL TICKETS</div>
@@ -155,7 +156,6 @@
             </div>
 
             <div class="grid">
-                <!-- Left Sidebar: Create Ticket -->
                 <div>
                     <div class="card">
                         <div class="card-title">Create Ticket</div>
@@ -171,7 +171,6 @@
                     </div>
                 </div>
 
-                <!-- Right Board: Ticket List -->
                 <div>
                     <div class="card">
                         <div class="card-title">
@@ -196,6 +195,19 @@
         </div>
     </div>
 
+    <!-- TICKET DETAILS MODAL (Triggers GET /tickets/{id}) -->
+    <div class="modal-overlay" id="ticketModal" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="card-title">
+                <span>Ticket Details (GET /tickets/{id})</span>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal()">✕</button>
+            </div>
+            <div id="modalBody">
+                <p style="color: var(--text-muted)">Loading ticket details...</p>
+            </div>
+        </div>
+    </div>
+
     <div id="toastContainer"></div>
 
     <footer class="footer">
@@ -213,7 +225,7 @@
 
         let token = localStorage.getItem('jwt_token') || '';
         let currentUserEmail = localStorage.getItem('user_email') || '';
-        let authMode = 'login'; // 'login' or 'register'
+        let authMode = 'login';
         let allTickets = [];
         let currentFilter = 'all';
 
@@ -420,6 +432,43 @@
             }
         }
 
+        /* GET /tickets/{id} - View Single Ticket by ID */
+        async function viewSingleTicket(id) {
+            document.getElementById('ticketModal').style.display = 'flex';
+            const body = document.getElementById('modalBody');
+            body.innerHTML = `<p style="color: var(--text-muted)">Fetching ticket via GET /tickets/${id}...</p>`;
+
+            try {
+                const res = await fetch(`${apiHost}/tickets/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const ticket = await res.json();
+                if (res.ok) {
+                    body.innerHTML = `
+                        <div style="margin-bottom: 1rem;">
+                            <span class="badge badge-${ticket.status}">${ticket.status.replace('_', ' ')}</span>
+                            <h3 style="font-size: 1.2rem; margin: 0.5rem 0;">${escapeHtml(ticket.title)}</h3>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">${escapeHtml(ticket.description || 'No description.')}</p>
+                        </div>
+                        <div style="font-size: 0.8rem; background: #030712; padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <p><strong>Ticket ID:</strong> ${ticket.id}</p>
+                            <p><strong>Owner User ID:</strong> ${ticket.user_id}</p>
+                            <p><strong>Created At:</strong> ${new Date(ticket.created_at).toLocaleString()}</p>
+                            <p><strong>Updated At:</strong> ${new Date(ticket.updated_at).toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    body.innerHTML = `<p style="color: var(--danger)">${ticket.error || 'Failed to fetch ticket'}</p>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<p style="color: var(--danger)">Error connecting to API server</p>`;
+            }
+        }
+
+        function closeModal(e) {
+            document.getElementById('ticketModal').style.display = 'none';
+        }
+
         function setFilter(filter, el) {
             currentFilter = filter;
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -457,7 +506,7 @@
                     </div>
                     <div class="ticket-desc">${escapeHtml(t.description || 'No description provided.')}</div>
                     <div class="ticket-meta">
-                        <span>ID: ${t.id}</span>
+                        <button class="btn btn-secondary btn-sm" onclick="viewSingleTicket('${t.id}')">👁 View ID (${t.id.substring(0, 8)}...)</button>
                         <div>
                             ${t.status === 'open' ? `<button class="btn btn-sm" onclick="updateStatus('${t.id}', 'in_progress')">Start Progress →</button>` : ''}
                             ${t.status === 'in_progress' ? `<button class="btn btn-sm" style="background: #10b981" onclick="updateStatus('${t.id}', 'closed')">Mark Closed ✓</button>` : ''}
