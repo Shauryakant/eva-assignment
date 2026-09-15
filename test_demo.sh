@@ -7,12 +7,13 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-BASE_URL="http://localhost:8080"
+BASE_URL="${1:-https://ticket-system-api-gagd.onrender.com}"
 EMAIL="demo_user_$(date +%s)@example.com"
 PASSWORD="password123"
 
 echo -e "${CYAN}====================================================${NC}"
 echo -e "${CYAN}    TICKET SYSTEM API - AUTOMATED DEMO TEST RUN      ${NC}"
+echo -e "${CYAN}    TARGET: $BASE_URL${NC}"
 echo -e "${CYAN}====================================================${NC}"
 sleep 1.5
 
@@ -43,7 +44,7 @@ echo ""
 TOKEN=$(echo "$LOGIN_RESP" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
 if [ -z "$TOKEN" ]; then
-  echo -e "${RED}Failed to obtain JWT token! Is the server running on port 8080?${NC}"
+  echo -e "${RED}Failed to obtain JWT token! Is the server running?${NC}"
   exit 1
 fi
 
