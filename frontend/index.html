@@ -271,7 +271,10 @@
             }
         }
 
-        function handleLogout() {
+        async function handleLogout() {
+            try {
+                await fetch(`${apiHost}/auth/logout`, { method: 'POST' });
+            } catch (err) {}
             token = '';
             currentUserEmail = '';
             localStorage.removeItem('jwt_token');
@@ -280,7 +283,7 @@
             updateUIState();
             updateStats();
             document.getElementById('ticketsList').innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Log in to view your tickets.</p>`;
-            showToast('Logged out', 'success');
+            showToast('Logged out successfully', 'success');
         }
 
         async function handleCreateTicket() {

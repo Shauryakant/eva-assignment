@@ -147,3 +147,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		"token": tokenString,
 	})
 }
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	utils.JSON(w, http.StatusOK, map[string]string{
+		"message": "logged out successfully",
+	})
+}

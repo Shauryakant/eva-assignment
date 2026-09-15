@@ -44,6 +44,7 @@ func SetupRouter(cfg *config.Config, db *database.DB) http.Handler {
 
 	r.Post("/auth/register", authHandler.Register)
 	r.Post("/auth/login", authHandler.Login)
+	r.Post("/auth/logout", authHandler.Logout)
 
 	r.Group(func(r chi.Router) {
 		r.Use(authmiddleware.JWTAuth(cfg.JWTSecret))
