@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket System - Management Dashboard</title>
+    <title>Ticket System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,38 +23,45 @@
             --text-muted: #9ca3af;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 3rem; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
         
-        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.25rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
         .logo span { color: var(--primary); }
         .user-status { display: flex; align-items: center; gap: 1rem; font-size: 0.875rem; }
         .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 600; }
 
-        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; flex: 1; width: 100%; }
+
+        .auth-container { max-width: 420px; margin: 4rem auto; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        .auth-header { text-align: center; margin-bottom: 1.5rem; }
+        .auth-header h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .auth-header p { color: var(--text-muted); font-size: 0.875rem; }
+
+        .auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .auth-tab { flex: 1; text-align: center; padding: 0.75rem; cursor: pointer; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
         .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; }
         .stat-value { font-size: 1.75rem; font-weight: 700; }
 
-        .grid { display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; }
+        .grid { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; }
         @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
 
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
         .card-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
         
-        .form-group { margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1.25rem; }
         label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
         input, textarea, select { width: 100%; padding: 0.75rem 1rem; background: #030712; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; transition: border-color 0.2s; }
         input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-        input:disabled, textarea:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; width: 100%; }
-        .btn:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
         .btn-secondary { background: #374151; color: var(--text); }
-        .btn-secondary:hover:not(:disabled) { background: #4b5563; }
+        .btn-secondary:hover { background: #4b5563; }
         .btn-danger { background: var(--danger); }
         .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; width: auto; }
 
@@ -80,8 +87,10 @@
         .toast-error { background: #dc2626; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        .api-config { background: #111827; border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
-        .api-config input { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+        .footer { text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: auto; }
+        .api-config-toggle { cursor: pointer; text-decoration: underline; color: var(--primary); }
+        .api-config-bar { display: none; margin-top: 0.75rem; justify-content: center; align-items: center; gap: 0.5rem; }
+        .api-config-bar.show { display: flex; }
     </style>
 </head>
 <body>
@@ -96,80 +105,89 @@
     </nav>
 
     <div class="container">
-        <div class="api-config">
-            <label style="margin: 0; white-space: nowrap;">API Host:</label>
-            <input type="text" id="apiHostInput" placeholder="http://localhost:8080" value="">
-            <button class="btn btn-secondary btn-sm" onclick="saveApiHost()">Save Host</button>
+        <!-- VIEW 1: AUTHENTICATION SCREEN (LOGIN / REGISTER) -->
+        <div id="authScreen" class="auth-container">
+            <div class="auth-header">
+                <h2 id="authTitle">Welcome Back</h2>
+                <p id="authSubtitle">Sign in to manage your support tickets</p>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin" onclick="switchAuthMode('login')">Sign In</div>
+                <div class="auth-tab" id="tabRegister" onclick="switchAuthMode('register')">Create Account</div>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="authEmail" placeholder="name@example.com">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="••••••••">
+            </div>
+
+            <button class="btn" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign In</button>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">TOTAL TICKETS</div>
-                <div class="stat-value" id="statTotal">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">OPEN</div>
-                <div class="stat-value" style="color: #60a5fa" id="statOpen">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">IN PROGRESS</div>
-                <div class="stat-value" style="color: #fbbf24" id="statInProgress">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">CLOSED</div>
-                <div class="stat-value" style="color: #34d399" id="statClosed">0</div>
-            </div>
-        </div>
-
-        <div class="grid">
-            <div>
-                <div class="card" id="authCard">
-                    <div class="card-title">Authentication</div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" id="authEmail" placeholder="name@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="authPassword" placeholder="••••••••">
-                    </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn" onclick="handleRegister()">Register</button>
-                        <button class="btn btn-secondary" onclick="handleLogin()">Login</button>
-                    </div>
+        <!-- VIEW 2: DASHBOARD (TICKET MANAGEMENT) -->
+        <div id="dashboardScreen" style="display: none;">
+            <!-- Stats Bar -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">TOTAL TICKETS</div>
+                    <div class="stat-value" id="statTotal">0</div>
                 </div>
-
-                <div class="card">
-                    <div class="card-title">Create Ticket</div>
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" id="ticketTitle" placeholder="e.g., API Rate Limiting Issue">
-                    </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea id="ticketDesc" rows="3" placeholder="Provide detailed information..."></textarea>
-                    </div>
-                    <button class="btn" id="createTicketBtn" onclick="handleCreateTicket()">Create Ticket</button>
+                <div class="stat-card">
+                    <div class="stat-label">OPEN</div>
+                    <div class="stat-value" style="color: #60a5fa" id="statOpen">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">IN PROGRESS</div>
+                    <div class="stat-value" style="color: #fbbf24" id="statInProgress">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">CLOSED</div>
+                    <div class="stat-value" style="color: #34d399" id="statClosed">0</div>
                 </div>
             </div>
 
-            <div>
-                <div class="card">
-                    <div class="card-title">
-                        <span>Ticket Board</span>
-                        <button class="btn btn-secondary btn-sm" onclick="fetchTickets()">↻ Refresh</button>
+            <div class="grid">
+                <!-- Left Sidebar: Create Ticket -->
+                <div>
+                    <div class="card">
+                        <div class="card-title">Create Ticket</div>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="ticketTitle" placeholder="e.g., API Rate Limiting Issue">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="ticketDesc" rows="4" placeholder="Provide detailed information..."></textarea>
+                        </div>
+                        <button class="btn" onclick="handleCreateTicket()">Create Ticket</button>
                     </div>
+                </div>
 
-                    <div class="controls">
-                        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-                        <button class="filter-btn" onclick="setFilter('open', this)">Open</button>
-                        <button class="filter-btn" onclick="setFilter('in_progress', this)">In Progress</button>
-                        <button class="filter-btn" onclick="setFilter('closed', this)">Closed</button>
-                        <input type="text" id="searchInput" placeholder="Search tickets..." oninput="renderTickets()" style="flex: 1; min-width: 150px; padding: 0.4rem 0.8rem; font-size: 0.8rem;">
-                    </div>
+                <!-- Right Board: Ticket List -->
+                <div>
+                    <div class="card">
+                        <div class="card-title">
+                            <span>Ticket Board</span>
+                            <button class="btn btn-secondary btn-sm" onclick="fetchTickets()">↻ Refresh</button>
+                        </div>
 
-                    <div id="ticketsList">
-                        <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Log in to view your tickets.</p>
+                        <div class="controls">
+                            <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+                            <button class="filter-btn" onclick="setFilter('open', this)">Open</button>
+                            <button class="filter-btn" onclick="setFilter('in_progress', this)">In Progress</button>
+                            <button class="filter-btn" onclick="setFilter('closed', this)">Closed</button>
+                            <input type="text" id="searchInput" placeholder="Search tickets..." oninput="renderTickets()" style="flex: 1; min-width: 150px; padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                        </div>
+
+                        <div id="ticketsList">
+                            <p style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading tickets...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,6 +196,14 @@
 
     <div id="toastContainer"></div>
 
+    <footer class="footer">
+        <p>Ticket System API Microservice &bull; <span class="api-config-toggle" onclick="toggleApiHostBar()">Configure API Host</span></p>
+        <div class="api-config-bar" id="apiHostBar">
+            <input type="text" id="apiHostInput" style="max-width: 300px; padding: 0.4rem 0.8rem; font-size: 0.8rem;" placeholder="http://localhost:8080">
+            <button class="btn btn-secondary btn-sm" onclick="saveApiHost()">Save Host</button>
+        </div>
+    </footer>
+
     <script>
         let apiHost = localStorage.getItem('api_host') || window.location.origin;
         if (apiHost.endsWith('/')) apiHost = apiHost.slice(0, -1);
@@ -185,16 +211,12 @@
 
         let token = localStorage.getItem('jwt_token') || '';
         let currentUserEmail = localStorage.getItem('user_email') || '';
+        let authMode = 'login'; // 'login' or 'register'
         let allTickets = [];
         let currentFilter = 'all';
 
-        function getEmailFromToken(jwt) {
-            try {
-                const payload = JSON.parse(atob(jwt.split('.')[1]));
-                return payload.email || '';
-            } catch (e) {
-                return '';
-            }
+        function toggleApiHostBar() {
+            document.getElementById('apiHostBar').classList.toggle('show');
         }
 
         function saveApiHost() {
@@ -215,32 +237,61 @@
             setTimeout(() => toast.remove(), 3500);
         }
 
+        function getEmailFromToken(jwt) {
+            try {
+                const payload = JSON.parse(atob(jwt.split('.')[1]));
+                return payload.email || '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+            document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+            if (mode === 'login') {
+                document.getElementById('authTitle').innerText = 'Welcome Back';
+                document.getElementById('authSubtitle').innerText = 'Sign in to manage your support tickets';
+                document.getElementById('authSubmitBtn').innerText = 'Sign In';
+            } else {
+                document.getElementById('authTitle').innerText = 'Create Account';
+                document.getElementById('authSubtitle').innerText = 'Register to start submitting tickets';
+                document.getElementById('authSubmitBtn').innerText = 'Register Account';
+            }
+        }
+
         function updateUIState() {
             const userNav = document.getElementById('userNav');
-            const createBtn = document.getElementById('createTicketBtn');
-            const titleInput = document.getElementById('ticketTitle');
-            const descInput = document.getElementById('ticketDesc');
+            const authScreen = document.getElementById('authScreen');
+            const dashboardScreen = document.getElementById('dashboardScreen');
 
             const activeEmail = currentUserEmail || getEmailFromToken(token);
 
             if (token && activeEmail) {
+                authScreen.style.display = 'none';
+                dashboardScreen.style.display = 'block';
                 userNav.innerHTML = `
                     <div class="avatar">${activeEmail[0].toUpperCase()}</div>
                     <span>${escapeHtml(activeEmail)}</span>
                     <button class="btn btn-secondary btn-sm btn-danger" onclick="handleLogout()">Logout</button>
                 `;
-                if (createBtn) createBtn.disabled = false;
-                if (titleInput) titleInput.disabled = false;
-                if (descInput) descInput.disabled = false;
             } else {
                 token = '';
                 currentUserEmail = '';
                 localStorage.removeItem('jwt_token');
                 localStorage.removeItem('user_email');
+                authScreen.style.display = 'block';
+                dashboardScreen.style.display = 'none';
                 userNav.innerHTML = `<span style="color: var(--text-muted)">Not Authenticated</span>`;
-                if (createBtn) createBtn.disabled = true;
-                if (titleInput) titleInput.disabled = true;
-                if (descInput) descInput.disabled = true;
+            }
+        }
+
+        async function handleAuthSubmit() {
+            if (authMode === 'login') {
+                await handleLogin();
+            } else {
+                await handleRegister();
             }
         }
 
@@ -257,7 +308,8 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    showToast('Registration successful! Please log in.', 'success');
+                    showToast('Registration successful! Logging in...', 'success');
+                    await handleLogin();
                 } else {
                     showToast(data.error || 'Registration failed', 'error');
                 }
@@ -304,16 +356,11 @@
             localStorage.removeItem('user_email');
             allTickets = [];
             updateUIState();
-            updateStats();
-            document.getElementById('ticketsList').innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 2rem;">Log in to view your tickets.</p>`;
             showToast('Logged out successfully', 'success');
         }
 
         async function handleCreateTicket() {
-            if (!token) {
-                showToast('Authentication required! Please log in or register first.', 'error');
-                return;
-            }
+            if (!token) return showToast('Please log in first', 'error');
 
             const title = document.getElementById('ticketTitle').value.trim();
             const description = document.getElementById('ticketDesc').value.trim();
