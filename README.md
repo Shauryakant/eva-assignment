@@ -121,23 +121,6 @@ go test -v ./...
 
 ---
 
-## Incremental Git Commit History
-
-The project history follows the required 10-step commit workflow without squashing:
-
-- `40263fc` - `fix: add CORS headers and trim input IDs in ticket handlers`
-- `4cbac93` - `docs: README with run instructions, deployment URL, assumptions`
-- `5b0693e` - `chore: Dockerfile + docker-compose (optional, for local mongo)`
-- `46b6983` - `test: add basic handler/unit tests for auth and status transitions`
-- `ac95623` - `feat: patch ticket status with transition validation`
-- `b5ac966` - `feat: get single ticket with ownership check`
-- `ec84bdd` - `feat: ticket model + create + list endpoints`
-- `0682013` - `feat: auth register + login + JWT middleware`
-- `3c73429` - `feat: mongo connection + user model`
-- `82fe89b` - `chore: init go module, project structure, .env.example`
-
----
-
 ## Assumptions & Design Decisions
 
 1. **MongoDB Choice**: Aligns with JSON document structure, high read/write performance, and unique indexing (`users.email`).
