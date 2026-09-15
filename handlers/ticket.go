@@ -126,3 +126,67 @@ func (h *TicketHandler) GetTicketByID(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSON(w, http.StatusOK, ticket)
 }
+
+func (h *TicketHandler) UpdateTicketStatus(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.JSONError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	ticketID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		utils.JSONError(w, http.StatusNotFound, "ticket not found")
+		return
+	}
+
+	var input models.UpdateTicketStatusInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		utils.JSONError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if input.Status == "" {
+		utils.JSONError(w, http.StatusBadRequest, "status is required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var ticket models.Ticket
+	err = h.db.TicketsCollection().FindOne(ctx, bson.M{"_id": ticketID, "user_id": userID}).Decode(&ticket)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			utils.JSONError(w, http.StatusNotFound, "ticket not found")
+			return
+		}
+		utils.JSONError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+
+	if err := models.ValidateStatusTransition(ticket.Status, input.Status); err != nil {
+		utils.JSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	now := time.Now().UTC()
+	update := bson.M{
+		"$set": bson.M{
+			"status":     input.Status,
+			"updated_at": now,
+		},
+	}
+
+	_, err = h.db.TicketsCollection().UpdateOne(ctx, bson.M{"_id": ticketID, "user_id": userID}, update)
+	if err != nil {
+		utils.JSONError(w, http.StatusInternalServerError, "failed to update ticket status")
+		return
+	}
+
+	ticket.Status = input.Status
+	ticket.UpdatedAt = now
+
+	utils.JSON(w, http.StatusOK, ticket)
+}
