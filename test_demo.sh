@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-# Terminal colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 BASE_URL="http://localhost:8080"
 EMAIL="demo_user_$(date +%s)@example.com"
@@ -19,7 +18,8 @@ sleep 1.5
 
 # 1. Health Check
 echo -e "\n${YELLOW}[TEST 1/8] GET /health (Public Health Check)${NC}"
-curl -s -X GET "$BASE_URL/health" | jq . || curl -s -X GET "$BASE_URL/health"
+curl -s -X GET "$BASE_URL/health"
+echo ""
 sleep 2
 
 # 2. Register User
@@ -29,6 +29,7 @@ REGISTER_RESP=$(curl -s -X POST "$BASE_URL/auth/register" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
 echo "$REGISTER_RESP"
+echo ""
 sleep 2
 
 # 3. Login
@@ -37,8 +38,9 @@ LOGIN_RESP=$(curl -s -X POST "$BASE_URL/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
 echo "$LOGIN_RESP"
+echo ""
 
-TOKEN=$(echo "$LOGIN_RESP" | grep -o '"token":"[^"]*' | grep -o '[^"]*$')
+TOKEN=$(echo "$LOGIN_RESP" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
 
 if [ -z "$TOKEN" ]; then
   echo -e "${RED}Failed to obtain JWT token! Is the server running on port 8080?${NC}"
@@ -55,20 +57,23 @@ CREATE_RESP=$(curl -s -X POST "$BASE_URL/tickets" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"title":"Database Connection Spike","description":"High latency detected on Atlas cluster"}')
 echo "$CREATE_RESP"
+echo ""
 
-TICKET_ID=$(echo "$CREATE_RESP" | grep -o '"id":"[^"]*' | grep -o '[^"]*$')
+TICKET_ID=$(echo "$CREATE_RESP" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
 sleep 2
 
 # 5. List Tickets
 echo -e "\n${YELLOW}[TEST 5/8] GET /tickets (List User's Tickets)${NC}"
 curl -s -X GET "$BASE_URL/tickets" \
   -H "Authorization: Bearer $TOKEN"
+echo ""
 sleep 2
 
 # 6. Fetch Ticket by ID
 echo -e "\n${YELLOW}[TEST 6/8] GET /tickets/$TICKET_ID (Fetch Single Ticket)${NC}"
 curl -s -X GET "$BASE_URL/tickets/$TICKET_ID" \
   -H "Authorization: Bearer $TOKEN"
+echo ""
 sleep 2
 
 # 7. Valid Status Transition (open -> in_progress)
@@ -77,6 +82,7 @@ curl -s -X PATCH "$BASE_URL/tickets/$TICKET_ID/status" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"status":"in_progress"}'
+echo ""
 sleep 2
 
 # 8. Illegal Status Transition (in_progress -> open -> Expected 400 Bad Request)
@@ -85,6 +91,7 @@ curl -s -X PATCH "$BASE_URL/tickets/$TICKET_ID/status" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"status":"open"}'
+echo ""
 sleep 2
 
 echo -e "\n${GREEN}====================================================${NC}"
