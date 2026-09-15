@@ -219,7 +219,11 @@
     </footer>
 
     <script>
-        let apiHost = localStorage.getItem('api_host') || window.location.origin;
+        let defaultHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+            ? window.location.origin
+            : 'https://ticket-system-api-gagd.onrender.com';
+
+        let apiHost = localStorage.getItem('api_host') || defaultHost;
         if (apiHost.endsWith('/')) apiHost = apiHost.slice(0, -1);
         document.getElementById('apiHostInput').value = apiHost;
 
