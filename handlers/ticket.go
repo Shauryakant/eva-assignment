@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"ticket-system/database"
 	"ticket-system/middleware"
@@ -92,4 +94,35 @@ func (h *TicketHandler) ListTickets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSON(w, http.StatusOK, tickets)
+}
+
+func (h *TicketHandler) GetTicketByID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.JSONError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	ticketID, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		utils.JSONError(w, http.StatusNotFound, "ticket not found")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	var ticket models.Ticket
+	err = h.db.TicketsCollection().FindOne(ctx, bson.M{"_id": ticketID, "user_id": userID}).Decode(&ticket)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			utils.JSONError(w, http.StatusNotFound, "ticket not found")
+			return
+		}
+		utils.JSONError(w, http.StatusInternalServerError, "database error")
+		return
+	}
+
+	utils.JSON(w, http.StatusOK, ticket)
 }
