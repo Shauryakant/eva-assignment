@@ -3,6 +3,8 @@
 A backend-only RESTful microservice built in Golang for managing user authentication and support ticket lifecycle management, featuring an optional standalone Web Dashboard UI.
 
 - **GitHub Repository**: [https://github.com/Shauryakant/eva-assignment.git](https://github.com/Shauryakant/eva-assignment.git)
+- **Live Deployed API URL**: [https://ticket-system-api-gagd.onrender.com](https://ticket-system-api-gagd.onrender.com)
+- **Public Health Check URL**: [https://ticket-system-api-gagd.onrender.com/health](https://ticket-system-api-gagd.onrender.com/health)
 - **Database**: MongoDB Atlas (`evabharat`)
 
 ---
