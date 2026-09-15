@@ -1,6 +1,9 @@
 # Ticket System API Microservice
 
-A backend-only RESTful microservice built in Golang for managing user authentication and support ticket lifecycle management. Designed and implemented for a technical take-home assignment following strict contract guidelines and endpoint specifications.
+A backend-only RESTful microservice built in Golang for managing user authentication and support ticket lifecycle management, featuring an optional standalone Web Dashboard UI.
+
+- **GitHub Repository**: [https://github.com/Shauryakant/eva-assignment.git](https://github.com/Shauryakant/eva-assignment.git)
+- **Live Database**: MongoDB Atlas (`evabharat`)
 
 ---
 
@@ -11,6 +14,7 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 - **Authentication**: JWT (HS256) via `github.com/golang-jwt/jwt/v5`
 - **Password Hashing**: `bcrypt` (`golang.org/x/crypto/bcrypt`)
 - **Configuration**: Environment variables (`.env` via `github.com/joho/godotenv`)
+- **Frontend / Dashboard**: HTML5, CSS3 (Inter font, dark mode), Vanilla JavaScript (No frameworks)
 
 ---
 
@@ -21,7 +25,7 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 {
   "_id": "65f1a2b3c4d5e6f7a8b9c0d1",
   "email": "user@example.com",
-  "password_hash": "$2a$10$...", // Omitted from all JSON responses
+  "password_hash": "$2a$10$...", // Omitted from all JSON responses (json:"-")
   "created_at": "2026-09-15T10:00:00Z"
 }
 ```
@@ -45,9 +49,10 @@ A backend-only RESTful microservice built in Golang for managing user authentica
 
 | Method | Endpoint | Auth Required | Purpose | Success Code |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/health` | No | Health check endpoint | `200 OK` |
-| `POST` | `/auth/register` | No | Register new user | `201 Created` |
-| `POST` | `/auth/login` | No | Authenticate user & return JWT | `200 OK` |
+| `GET` | `/health` | No | Public health check endpoint | `200 OK` |
+| `POST` | `/auth/register` | No | Register new user (bcrypt password hashing) | `201 Created` |
+| `POST` | `/auth/login` | No | Authenticate user & return JWT token | `200 OK` |
+| `POST` | `/auth/logout` | No | Logout user & clear session | `200 OK` |
 | `POST` | `/tickets` | Yes (`Bearer <token>`) | Create a new ticket owned by caller | `201 Created` |
 | `GET` | `/tickets` | Yes (`Bearer <token>`) | List all tickets owned by caller | `200 OK` |
 | `GET` | `/tickets/{id}` | Yes (`Bearer <token>`) | Fetch single ticket by ID | `200 OK` / `404 Not Found` |
@@ -79,12 +84,12 @@ $$\text{open} \xrightarrow{\quad} \text{in\_progress} \xrightarrow{\quad} \text{
 
 ## Environment Variables
 
-Copy `.env.example` to `.env`:
+Configure `.env`:
 
 ```env
 PORT=8080
-MONGODB_URI=mongodb://localhost:27017
-DB_NAME=ticket_system
+MONGODB_URI=mongodb+srv://udemy:udemy123@cluster0.ywipqhb.mongodb.net/evabharat
+DB_NAME=evabharat
 JWT_SECRET=supersecretjwtkeychangeinproduction
 ```
 
@@ -96,50 +101,75 @@ JWT_SECRET=supersecretjwtkeychangeinproduction
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd ticket-system
+git clone https://github.com/Shauryakant/eva-assignment.git
+cd eva-assignment
 
-# Install dependencies and run
+# Run the API server
 go run main.go
 ```
 
-### 2. Running with Docker
+Open your browser at **[http://localhost:8080](http://localhost:8080)** to test via the built-in interactive dashboard.
+
+### 2. Running Automated Terminal Demo Script
 
 ```bash
-# Build Docker image
-docker build -t ticket-system .
-
-# Run container
-docker run -p 8080:8080 -e MONGODB_URI="mongodb://host.docker.internal:27017" ticket-system
+# In Git Bash:
+bash test_demo.sh
 ```
 
-### 3. Running with Docker Compose (App + Local MongoDB)
-
-```bash
-docker-compose up --build
-```
-
-### 4. Verifying Health Check
-
-```bash
-curl http://localhost:8080/health
-# Response: {"status":"ok"}
-```
-
----
-
-## Running Automated Tests
+### 3. Running Unit Tests
 
 ```bash
 go test -v ./...
 ```
 
+### 4. Running with Docker Container
+
+```bash
+docker build -t ticket-system .
+docker run -p 8080:8080 ticket-system
+```
+
 ---
 
-## Deployment Information
+## Deployment Instructions
 
-- **Deployed Application URL**: `https://ticket-system-golang.onrender.com`
-- **Public Health Check URL**: `https://ticket-system-golang.onrender.com/health`
+### A. Deploy Backend on Render (Free Tier)
+1. Sign in to [render.com](https://render.com) with GitHub.
+2. Create **New Web Service** pointing to `Shauryakant/eva-assignment`.
+3. Select **Docker** runtime.
+4. Add environment variables:
+   - `PORT`: `8080`
+   - `MONGODB_URI`: `mongodb+srv://udemy:udemy123@cluster0.ywipqhb.mongodb.net/evabharat`
+   - `DB_NAME`: `evabharat`
+   - `JWT_SECRET`: `supersecretjwtkeychangeinproduction`
+5. Deploy service and copy public URL (e.g. `https://ticket-system-api.onrender.com`).
+6. Verify `/health` endpoint: `https://ticket-system-api.onrender.com/health`.
+
+### B. Deploy Frontend on Vercel (Free Tier)
+1. Sign in to [vercel.com](https://vercel.com) with GitHub.
+2. Add project pointing to `Shauryakant/eva-assignment`.
+3. Deploy (Vercel automatically detects `vercel.json`).
+4. On your live Vercel URL, click **Configure API Host** in the footer and paste your live Render backend URL.
+
+---
+
+## Incremental Git Commit History
+
+The project history follows the required 10-step incremental commit workflow without squashing:
+
+```text
+40263fc fix: add CORS headers and trim input IDs in ticket handlers
+4cbac93 docs: README with run instructions, deployment URL, assumptions
+5b0693e chore: Dockerfile + docker-compose (optional, for local mongo)
+46b6983 test: add basic handler/unit tests for auth and status transitions
+ac95623 feat: patch ticket status with transition validation
+b5ac966 feat: get single ticket with ownership check
+ec84bdd feat: ticket model + create + list endpoints
+0682013 feat: auth register + login + JWT middleware
+3c73429 feat: mongo connection + user model
+82fe89b chore: init go module, project structure, .env.example
+```
 
 ---
 
